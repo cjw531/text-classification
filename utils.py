@@ -10,7 +10,7 @@ from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from nltk.tokenize import word_tokenize
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, plot_roc_curve, RocCurveDisplay
+from sklearn.metrics import confusion_matrix, RocCurveDisplay
 from mlxtend.plotting import plot_confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -30,7 +30,7 @@ def word_count(df: pd.DataFrame) -> plt:
         train_words = df[df['target'] == label_idx]['word_count']
         ax.hist(train_words)
         avg = df[df['target'] == label_idx]['word_count'].mean()
-        ax.set_title('Label: ' + str(label_idx) + ' (Avg: ' + str(round(avg, 2)) + ')')
+        ax.set_title('Label: ' + str(label_idx) + '\n(Avg: ' + str(round(avg, 2)) + ')')
         label_idx += 1
     fig.suptitle('Word Count Histogram')
     fig.tight_layout()
@@ -49,7 +49,7 @@ def char_count(df: pd.DataFrame) -> plt:
         train_words = df[df['target'] == label_idx]['char_count']
         ax.hist(train_words)
         avg = df[df['target'] == label_idx]['char_count'].mean()
-        ax.set_title('Label: ' + str(label_idx) + ' (Avg: ' + str(round(avg, 2)) + ')')
+        ax.set_title('Label: ' + str(label_idx) + '\n(Avg: ' + str(round(avg, 2)) + ')')
         label_idx += 1
     fig.suptitle('Character Count Histogram')
     fig.tight_layout()
@@ -68,7 +68,7 @@ def unique_word_count(df: pd.DataFrame) -> plt:
         train_words = df[df['target'] == label_idx]['unique_word_count']
         ax.hist(train_words)
         avg = df[df['target'] == label_idx]['unique_word_count'].mean()
-        ax.set_title('Label: ' + str(label_idx) + ' (Avg: ' + str(round(avg, 2)) + ')')
+        ax.set_title('Label: ' + str(label_idx) + '\n(Avg: ' + str(round(avg, 2)) + ')')
         label_idx += 1
     fig.suptitle('Unique Word Count Histogram')
     fig.tight_layout()
@@ -153,6 +153,8 @@ def gpu_management():
             for gpu in gpus:
                 tf.config.experimental.set_memory_growth(gpu, True)
                 logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                # limit the VRAM memory if required (set to 2GB for now)
+                # tf.config.experimental.set_virtual_device_configuration(gpu, [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2000)])
                 print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
         except RuntimeError as e:
             print(e)
