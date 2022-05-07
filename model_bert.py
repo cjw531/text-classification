@@ -1,12 +1,3 @@
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
-from keras.layers.embeddings import Embedding
-from keras.preprocessing import sequence
-from keras.preprocessing.text import Tokenizer
-from keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import classification_report
 from tqdm.keras import TqdmCallback
@@ -14,25 +5,33 @@ import numpy as np
 import time
 from utils import *
 
+import tensorflow as tf
+import tensorflow_hub as hub
+import tensorflow_text as text
+
+
 ''' Parent class for all the CNN models '''
-class CNNModel:
-    def __init__(self, X_train, y_train, X_test, y_test, max_words, num_class):
+class BERTModel:
+    def __init__(self, X_train, y_train, X_test, y_test, num_class):
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
         self.y_predict = None
         self.y_prob = None
-        self.max_words = max_words
         self.num_class = num_class
         self.model = None
         gpu_management() # gpu set up for tensorflow
+        self.bert_preprocess = None
+        self.bert_encoder = None
+        self.text_input = None
+        self.outputs = None
+        self.download_bert()
+        self.bert_model()
 
     def runner(self):
         ''' Total runner function '''
         print("Model:\t " + self.name)
-        self.tokenize()
-        self.padding()
 
         start_time = time.time()
         self.train()
@@ -48,15 +47,14 @@ class CNNModel:
         self.print_report()
         self.print_confusion()
 
-    def tokenize(self):
-        tokenizer = Tokenizer(num_words=5000)
-        tokenizer.fit_on_texts(self.X_train)
-        self.X_train = tokenizer.texts_to_sequences(self.X_train)
-        self.X_test = tokenizer.texts_to_sequences(self.X_test)
+    def download_bert(self):
+        self.bert_preprocess = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3")
+        self.bert_encoder = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/4")
 
-    def padding(self):
-        self.X_train = sequence.pad_sequences(self.X_train, maxlen=self.max_words)
-        self.X_test = sequence.pad_sequences(self.X_test, maxlen=self.max_words)
+    def bert_model(self):
+        self.text_input = tf.keras.layers.Input(shape=(), dtype=tf.string, name='text')
+        preprocessed_text = self.bert_preprocess(self.text_input)
+        self.outputs = self.bert_encoder(preprocessed_text)
 
     def train(self):
         self.model.fit(self.X_train, self.y_train, validation_data=(self.X_test, self.y_test), epochs=50, batch_size=128, 
@@ -84,24 +82,21 @@ class CNNModel:
         draw_matrix(y_test, self.y_predict.tolist(), 'Confusion Matrix' , label).show()
 
 ''' 
-Below is the child class under CNN models 
+Below is the child class under BERT transformer pre-trained models 
 1. Binary classifier model
 2. Multiclass classifier model
 '''
-class CNNBinary(CNNModel):
-    def __init__(self, X_train, y_train, X_test, y_test, max_words, num_class):
-        CNNModel.__init__(self, X_train, y_train, X_test, y_test, max_words, num_class)
-        self.model = self.build_cnn()
-        self.name = 'Binary CNN'
+class BERTBinary(BERTModel):
+    def __init__(self, X_train, y_train, X_test, y_test, num_class):
+        BERTModel.__init__(self, X_train, y_train, X_test, y_test, num_class)
+        self.model = self.build_nn()
+        self.name = 'Binary BERT'
 
-    def build_cnn(self) -> Sequential:
-        model = Sequential()
-        model.add(Embedding(5000, 32, input_length=self.max_words))
-        model.add(Conv1D(32, 3, padding='same', activation='relu'))
-        model.add(MaxPooling1D())
-        model.add(Flatten())
-        model.add(Dense(250, activation='relu'))
-        model.add(Dense(1, activation='sigmoid')) # binary
+    def build_nn(self) -> tf.keras.Model:
+        l = tf.keras.layers.Dense(250, activation='relu')(self.outputs['pooled_output'])
+        l = tf.keras.layers.Dropout(0.5, name="dropout")(l)
+        l = tf.keras.layers.Dense(1, activation='sigmoid', name="output")(l)
+        model = tf.keras.Model(inputs=[self.text_input], outputs = [l])
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.summary()
         return model
@@ -113,22 +108,19 @@ class CNNBinary(CNNModel):
         '''
         self.y_predict = np.where(self.y_prob > 0.5, 1,0)
 
-class CNNMulti(CNNModel):
-    def __init__(self, X_train, y_train, X_test, y_test, max_words, num_class):
-        CNNModel.__init__(self, X_train, y_train, X_test, y_test, max_words, num_class)
-        self.model = self.build_cnn()
-        self.name = 'Multi CNN'
+class BERTMulti(BERTModel):
+    def __init__(self, X_train, y_train, X_test, y_test, num_class):
+        BERTModel.__init__(self, X_train, y_train, X_test, y_test, num_class)
+        self.model = self.build_nn()
+        self.name = 'Multi BERT'
         self.y_train = to_categorical(y_train, self.num_class)
         self.y_test = to_categorical(y_test, self.num_class)
 
-    def build_cnn(self) -> Sequential:
-        model = Sequential()
-        model.add(Embedding(5000, 32, input_length=self.max_words))
-        model.add(Conv1D(32, 3, padding='same', activation='relu'))
-        model.add(MaxPooling1D())
-        model.add(Flatten())
-        model.add(Dense(250, activation='relu'))
-        model.add(Dense(self.num_class, activation='softmax')) # multi
+    def build_nn(self) -> tf.keras.Model:
+        l = tf.keras.layers.Dense(250, activation='relu')(self.outputs['pooled_output'])
+        l = tf.keras.layers.Dropout(0.5, name="dropout")(l)
+        l = tf.keras.layers.Dense(self.num_class, activation='softmax', name="output")(l)
+        model = tf.keras.Model(inputs=[self.text_input], outputs = [l])
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.summary()
         return model
