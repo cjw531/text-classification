@@ -1,8 +1,6 @@
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
+from keras.layers import Flatten, Dense, Dropout
+from keras.layers.convolutional import Conv1D, MaxPooling1D
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 from keras.preprocessing.text import Tokenizer
@@ -100,6 +98,7 @@ class CNNBinary(CNNModel):
         model.add(MaxPooling1D())
         model.add(Flatten())
         model.add(Dense(250, activation='relu'))
+        model.add(Dropout(0.1))
         model.add(Dense(1, activation='sigmoid')) # binary
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.summary()
@@ -127,6 +126,7 @@ class CNNMulti(CNNModel):
         model.add(MaxPooling1D())
         model.add(Flatten())
         model.add(Dense(250, activation='relu'))
+        model.add(Dropout(0.1))
         model.add(Dense(self.num_class, activation='softmax')) # multi
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.summary()

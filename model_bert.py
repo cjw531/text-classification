@@ -1,14 +1,11 @@
+import tensorflow as tf
+import tensorflow_hub as hub
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import classification_report
 from tqdm.keras import TqdmCallback
 import numpy as np
 import time
 from utils import *
-
-import tensorflow as tf
-import tensorflow_hub as hub
-import tensorflow_text as text
-
 
 ''' Parent class for all the CNN models '''
 class BERTModel:
@@ -89,14 +86,17 @@ Below is the child class under BERT transformer pre-trained models
 class BERTBinary(BERTModel):
     def __init__(self, X_train, y_train, X_test, y_test, num_class):
         BERTModel.__init__(self, X_train, y_train, X_test, y_test, num_class)
-        self.model = self.build_nn()
+        self.model = self.build_cnn()
         self.name = 'Binary BERT'
 
-    def build_nn(self) -> tf.keras.Model:
-        l = tf.keras.layers.Dense(250, activation='relu')(self.outputs['pooled_output'])
-        l = tf.keras.layers.Dropout(0.5, name="dropout")(l)
-        l = tf.keras.layers.Dense(1, activation='sigmoid', name="output")(l)
-        model = tf.keras.Model(inputs=[self.text_input], outputs = [l])
+    def build_cnn(self) -> tf.keras.Model:
+        net = tf.keras.layers.Conv1D(32, (2), activation='relu')(self.outputs["sequence_output"])
+        net = tf.keras.layers.GlobalMaxPool1D()(net)
+        net = tf.keras.layers.Flatten()(net)
+        net = tf.keras.layers.Dense(250, activation="relu")(net)
+        net = tf.keras.layers.Dropout(0.1)(net)
+        net = tf.keras.layers.Dense(1, activation='sigmoid', name="output")(net)
+        model = tf.keras.Model(inputs=[self.text_input], outputs = [net])
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.summary()
         return model
@@ -111,16 +111,19 @@ class BERTBinary(BERTModel):
 class BERTMulti(BERTModel):
     def __init__(self, X_train, y_train, X_test, y_test, num_class):
         BERTModel.__init__(self, X_train, y_train, X_test, y_test, num_class)
-        self.model = self.build_nn()
+        self.model = self.build_cnn()
         self.name = 'Multi BERT'
         self.y_train = to_categorical(y_train, self.num_class)
         self.y_test = to_categorical(y_test, self.num_class)
 
-    def build_nn(self) -> tf.keras.Model:
-        l = tf.keras.layers.Dense(250, activation='relu')(self.outputs['pooled_output'])
-        l = tf.keras.layers.Dropout(0.5, name="dropout")(l)
-        l = tf.keras.layers.Dense(self.num_class, activation='softmax', name="output")(l)
-        model = tf.keras.Model(inputs=[self.text_input], outputs = [l])
+    def build_cnn(self) -> tf.keras.Model:
+        net = tf.keras.layers.Conv1D(32, (2), activation='relu')(self.outputs["sequence_output"])
+        net = tf.keras.layers.GlobalMaxPool1D()(net)
+        net = tf.keras.layers.Flatten()(net)
+        net = tf.keras.layers.Dense(250, activation="relu")(net)
+        net = tf.keras.layers.Dropout(0.1)(net)
+        net = tf.keras.layers.Dense(self.num_class, activation="softmax", name='classifier')(net)
+        model = tf.keras.Model(inputs=[self.text_input], outputs = [net])
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         model.summary()
         return model
