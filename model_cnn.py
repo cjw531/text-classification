@@ -9,6 +9,7 @@ from sklearn.metrics import classification_report
 from tqdm.keras import TqdmCallback
 import numpy as np
 import time
+import psutil
 from utils import *
 
 ''' Parent class for all the CNN models '''
@@ -28,18 +29,25 @@ class CNNModel:
     def runner(self):
         ''' Total runner function '''
         print("Model:\t " + self.name)
+        print("")
         self.tokenize()
         self.padding()
 
         start_time = time.time()
         self.train()
         print("Train:\t %s seconds" % round((time.time() - start_time), 4))
+        print("Train CPU(%):\t", psutil.cpu_percent())
+        print("Train RAM(GB):\t", round(psutil.virtual_memory()[3] * 1e-9, 2))  # physical memory usage
+        print('Train RAM(%):\t', psutil.virtual_memory()[2])
+        print("")
 
         start_time = time.time()
         self.predict_prob()
         print("Predict: %s seconds" % round((time.time() - start_time), 4))
-
-        # print("VRAM:\t Sklearn models do not utlize any GPUs")
+        print("Predict CPU(%):\t", psutil.cpu_percent())
+        print("Predict RAM(GB):", round(psutil.virtual_memory()[3] * 1e-9, 2))  # physical memory usage
+        print('Predict RAM(%):\t', psutil.virtual_memory()[2])
+        print("")
 
         self.predict()
         self.print_report()
