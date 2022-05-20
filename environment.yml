@@ -1,0 +1,22 @@
+# To run: conda env create -f environment.yml
+name: textcls
+channels:
+    - conda-forge
+dependencies:
+    - python=3.9
+    - pandas
+    - numpy
+    - nltk
+    - scikit-learn
+    - matplotlib
+    - mlxtend
+    - jupyter
+    - ipython
+    - tensorflow-gpu
+    - tensorflow
+    - keras
+    - tqdm
+    - tensorflow-hub
+    - psutil
+    - pip:
+      - tensorflow-text
