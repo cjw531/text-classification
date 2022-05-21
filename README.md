@@ -66,7 +66,8 @@ svm_model.runner()
 gb_model = GradientBoosting(X_train_vectors_tfidf, y_train, X_val_vectors_tfidf, y_test)
 gb_model.runner()
 
-sklearn_roc_curve(y_test, [lg_model.y_prob, nb_model.y_prob, svm_model.y_prob, gb_model.y_prob], ['Logistic Regression', 'Naive Bayes', 'SVM', 'GradientBoosting']).show() # plotting roc curve
+sklearn_roc_curve(y_test, [lg_model.y_prob, nb_model.y_prob, svm_model.y_prob, gb_model.y_prob], 
+                        ['Logistic Regression', 'Naive Bayes', 'SVM', 'GradientBoosting']).show() # plotting roc curve
 ```
 
 Following processes are performed within the `runner()` method:
@@ -88,10 +89,10 @@ Models are modularized in [`model_cnn.py`](https://github.com/cjw531/text-classi
 max_words = get_max_words(df) # get maximum words based on the dataset
 num_class = len(le_name_mapping) # number of classes
 
-cnn_model = CNNBinary(X_train, y_train, X_test, y_test, max_words, num_class) # binary classifier
+cnn_model = CNNBinary(X_train, y_train, X_test, y_test, max_words, num_class) # binary model
 cnn_model.runner()
 
-cnn_model = CNNMulti(X_train, y_train, X_test, y_test, max_words, num_class) # multi class classifier
+cnn_model = CNNMulti(X_train, y_train, X_test, y_test, max_words, num_class) # multi class model
 cnn_model.runner()
 ```
 
@@ -140,6 +141,6 @@ Note that the local system has the following configurations:
 <hr>
 
 ## Future Work
-1. Hyperparameter tuning especially with BYOD (i.3. batch size, epoch, and etc.)
+1. Hyperparameter tuning especially with BYOD (i.e. batch size, epoch, and etc.)
 2. Add/modify layers in CNN and the BERT transformer based model
 3. Try MLP (Multi-Layer Perceptron) with and without BERT and compare the performance
