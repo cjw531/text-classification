@@ -41,6 +41,10 @@ class BERTModel:
         print('Train RAM(%):\t', psutil.virtual_memory()[2])
         print("")
 
+        name_str = self.name.replace(' ', '_').lower()
+        file_path = f"./model/{name_str}/1/"
+        self.model.save(file_path, include_optimizer=False)
+
         start_time = time.time()
         self.predict_prob()
         print("Predict: %s seconds" % round((time.time() - start_time), 4))

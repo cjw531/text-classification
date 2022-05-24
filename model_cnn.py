@@ -8,6 +8,7 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import classification_report
 from tqdm.keras import TqdmCallback
 import numpy as np
+import pickle
 import time
 import psutil
 from utils import *
@@ -41,6 +42,11 @@ class CNNModel:
         print('Train RAM(%):\t', psutil.virtual_memory()[2])
         print("")
 
+        name_str = self.name.replace(' ', '_').lower()
+        file_path = f"./model/{name_str}/1/"
+        self.model.save(filepath=file_path, save_format='tf')
+        print("\nModel saved at: ./model/1/" + name_str + '\n')
+
         start_time = time.time()
         self.predict_prob()
         print("Predict: %s seconds" % round((time.time() - start_time), 4))
@@ -58,6 +64,10 @@ class CNNModel:
         tokenizer.fit_on_texts(self.X_train)
         self.X_train = tokenizer.texts_to_sequences(self.X_train)
         self.X_test = tokenizer.texts_to_sequences(self.X_test)
+
+        name_str = self.name.replace(' ', '_').lower()
+        with open('./model/tokenizer_' + name_str + '.pickle', 'wb') as handle: # save tokenizer
+            pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def padding(self):
         self.X_train = sequence.pad_sequences(self.X_train, maxlen=self.max_words)
