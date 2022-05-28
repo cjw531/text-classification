@@ -18,5 +18,8 @@ dependencies:
     - tqdm
     - tensorflow-hub
     - psutil
+    - flask
+    - requests
     - pip:
       - tensorflow-text
+      - streamlit
