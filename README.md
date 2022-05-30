@@ -34,7 +34,13 @@ The following datasets are used:
 - Binary Dataset: [Disaster Tweets](https://www.kaggle.com/datasets/vstepanenko/disaster-tweets) dataset (1: disaster Tweet; 0: not a disaster Tweet)
 - Multi Class Dataset: [News Classification](https://www.kaggle.com/datasets/kishanyadav/inshort-news) dataset - only first 2 *.csv files are used(7 categorized classes in total: 'automobile', 'entertainment', 'politics', 'science', 'sports', 'technology', 'world')
 
-All data should be saved under `./data/` subdirectory, with a `*.csv` format.
+All data should be saved under `./data/` subdirectory, with a `*.csv` format:
+```
+├── data
+│   ├── inshort_news_data-1.csv
+│   ├── inshort_news_data-2.csv
+│   └── tweets.csv
+```
 
 Following cleanups are required:
 - X data column name should be 'text' and y data (label) column name should be 'target'
@@ -141,6 +147,7 @@ Note that the local system has the following configurations:
 <hr>
 
 ## Future Work
-1. Hyperparameter tuning especially with BYOD (i.e. batch size, epoch, and etc.)
-2. Add/modify layers in CNN and the BERT transformer based model
-3. Try MLP (Multi-Layer Perceptron) with and without BERT and compare the performance
+1. Try data balancing or augmentation since the sample size is skewed especially for the disaster Tweet dataset.
+2. Hyperparameter tuning especially with BYOD (i.e. batch size, epoch, and etc.)
+3. Add/modify layers in CNN and the BERT transformer based model
+4. Try MLP (Multi-Layer Perceptron) with and without BERT and compare the performance
